@@ -59,3 +59,20 @@ std::unordered_map<int, User> loadUserRatings(const std::string& filename) {
 
     return users;
 }
+
+int main() {
+    std::vector<Movie> movies = loadMovies("resources/movies.csv");
+    std::unordered_map<int, User> users = loadUserRatings("resources/user_ratings.csv");
+
+    std::cout << "Movies loaded: " << movies.size() << std::endl;
+    for (const Movie& m : movies) {
+        std::cout << m.id << " - " << m.title << " (" << m.genre << ")\n";
+    }
+
+    std::cout << "\nUsers loaded: " << users.size() << std::endl;
+    for (const auto& [id, user] : users) {
+        std::cout << "User " << user.id << " rated " << user.ratings.size() << " movies.\n";
+    }
+
+    return 0;
+}
