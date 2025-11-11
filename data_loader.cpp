@@ -1,34 +1,30 @@
-#include <iostream>
+#include "resources/models.h"
 #include <fstream>
 #include <sstream>
-#include <vector>
-#include <unordered_map>
-#include "models.h"
+#include <iostream>
 
 std::vector<Movie> loadMovies(const std::string& filename) {
     std::vector<Movie> movies;
     std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open " << filename << "\n";
+        return movies;
+    }
+
     std::string line;
-
-    if (!file.is_open()) return movies;
-
-    std::getline(file, line); // skip header
-
     while (std::getline(file, line)) {
         std::stringstream ss(line);
-        std::string idStr, title, genre, ratingStr;
+        std::string idStr, title, genre;
 
         std::getline(ss, idStr, ',');
         std::getline(ss, title, ',');
         std::getline(ss, genre, ',');
-        std::getline(ss, ratingStr, ',');
 
         Movie m;
         m.id = std::stoi(idStr);
         m.title = title;
         m.genre = genre;
-        m.averageRating = std::stod(ratingStr);
-
         movies.push_back(m);
     }
 
@@ -38,12 +34,13 @@ std::vector<Movie> loadMovies(const std::string& filename) {
 std::unordered_map<int, User> loadUserRatings(const std::string& filename) {
     std::unordered_map<int, User> users;
     std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open " << filename << "\n";
+        return users;
+    }
+
     std::string line;
-
-    if (!file.is_open()) return users;
-
-    std::getline(file, line); // skip header
-
     while (std::getline(file, line)) {
         std::stringstream ss(line);
         std::string userIdStr, movieIdStr, ratingStr;
