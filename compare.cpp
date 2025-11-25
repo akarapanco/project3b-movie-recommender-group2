@@ -2,13 +2,14 @@
 #include <unordered_map>
 #include "models.h"
 
-// ISA implement function to compare KNN and Collaborative Filtering results
-
-// Compare results from both algorithms for a given user
 void compareAlgorithms(
     int userId,
     const std::unordered_map<int, User>& users,
-    int k
+    int k 
 ) {
-    // call KNN + CF and compare results
+
 }
+// ISA: This file compares the two algorithms you wrote.
+// Call the KNN recommendations and your collaborative filtering recommendations,
+// print both lists for the same user, and describe how the results differ.
+// This will be used in our final report.
