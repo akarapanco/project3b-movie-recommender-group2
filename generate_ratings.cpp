@@ -31,6 +31,6 @@ int main() {
     }
 
     out.close();
-    cout << "Generated over 120,000 ratings!\n";
+    
     return 0;
 }
