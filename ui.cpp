@@ -100,7 +100,7 @@ int main() {
 
                 cout << "\nCollaborative Filtering Recommended Movies:\n";
 
-                // Isa: this will use your collaborative filtering algorithm
+                // Isa: call collaborative filtering algorithm
                 vector<int> recsCF = getCFRecommendations(userId, users);
 
                 for (int id : recsCF) {
