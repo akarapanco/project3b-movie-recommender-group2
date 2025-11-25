@@ -2,11 +2,10 @@
 #include <unordered_map>
 #include <vector>
 
+// Isa: implement Collaborative Filtering algorithm here
 std::vector<int> getCFRecommendations(
     int targetUserId,
     const std::unordered_map<int, User>& users
 ) {
-    // implement collaborative filtering here
-    std::vector<int> results;
-    return results;
+    // Isa: calculate similarity, predict ratings, return top movies
 }
