@@ -1,125 +1,108 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <string>
 #include "models.h"
 
 using namespace std;
 
-std::vector<Movie> loadMovies(const std::string& filename);
-std::unordered_map<int, User> loadUserRatings(const std::string& filename);
-std::vector<int> getRecommendations(
-    int targetUserId,
-    const std::unordered_map<int, User>& users,
-    int k
-);
+vector<Movie> loadMovies(const string& filename);
+unordered_map<int, User> loadUserRatings(const string& filename);
 
-// Isa: implement this function in collab.cpp
-std::vector<int> getCFRecommendations(
-    int targetUserId,
-    const std::unordered_map<int, User>& users
-);
+vector<int> getRecommendations(int targetUserId,
+                               const unordered_map<int, User>& users,
+                               int k);
 
-void showMenu() {
-    cout << "\n=============================\n";
-    cout << "     Movie Recommender\n";
-    cout << "=============================\n";
-    cout << "1. List all movies\n";
-    cout << "2. List all users\n";
-    cout << "3. Get KNN recommendations\n";
-    cout << "4. Get Collaborative Filtering recommendations\n";
-    cout << "5. Exit\n";
-    cout << "Choose an option: ";
-}
+// Isa: implement Collaborative Filtering logic in collab.cpp
+vector<int> getCFRecommendations(int targetUserId,
+                                 const unordered_map<int, User>& users);
 
 int main() {
     vector<Movie> movies = loadMovies("resources/movies.csv");
     unordered_map<int, User> users = loadUserRatings("resources/user_ratings.csv");
 
     if (movies.empty() || users.empty()) {
-        cout << "Error: Could not load required data.\n";
+        cout << "Error loading data.\n";
         return 1;
+    }
+
+    string username;
+    string favGenre;
+
+    cout << "\n==============================\n";
+    cout << "     What Should I Watch?\n";
+    cout << "==============================\n\n";
+
+    cout << "Enter your name: ";
+    cin >> username;
+
+    cout << "Enter your favorite genre: ";
+    cin >> favGenre;
+
+    int matchedUserId = -1;
+
+    for (const auto& [uid, user] : users) {
+        for (const auto& rating : user.ratings) {
+            for (const Movie& m : movies) {
+                if (m.id == rating.first && m.genre == favGenre) {
+                    matchedUserId = uid;
+                    break;
+                }
+            }
+            if (matchedUserId != -1) break;
+        }
+        if (matchedUserId != -1) break;
+    }
+
+    if (matchedUserId == -1) {
+        matchedUserId = 1001;
     }
 
     int choice = 0;
 
-    while (choice != 5) {
-        showMenu();
+    while (choice != 3) {
+        cout << "\n==============================\n";
+        cout << "   What Should I Watch Next?\n";
+        cout << "==============================\n";
+        cout << "1. People With Similar Taste Also Liked (KNN)\n";
+        cout << "2. We Think You Would LOVE These ❤️ (CF)\n";
+        cout << "3. Exit\n";
+        cout << "Choose an option: ";
+
         cin >> choice;
 
-        switch (choice) {
+        if (choice == 1) {
+            vector<int> recs = getRecommendations(matchedUserId, users, 5);
 
-            case 1:
-                cout << "\n--- All Movies ---\n";
+            cout << "\nPeople With Similar Taste Also Liked:\n";
+            int count = 0;
+            for (int id : recs) {
                 for (const Movie& m : movies) {
-                    cout << m.id << " - " << m.title << " (" << m.genre << ")\n";
-                }
-                break;
-
-            case 2:
-                cout << "\n--- All Users ---\n";
-                for (const auto& [uid, user] : users) {
-                    cout << "User " << uid
-                         << " | Ratings: " << user.ratings.size() << endl;
-                }
-                break;
-
-            case 3: {
-                int userId, k;
-                cout << "Enter user ID: ";
-                cin >> userId;
-                cout << "Enter k (neighbors): ";
-                cin >> k;
-
-                if (users.find(userId) == users.end()) {
-                    cout << "User not found!\n";
-                    break;
-                }
-
-                vector<int> recs = getRecommendations(userId, users, k);
-
-                cout << "\nKNN Recommended Movies:\n";
-                for (int id : recs) {
-                    for (const Movie& m : movies) {
-                        if (m.id == id) {
-                            cout << m.title << " (" << m.genre << ")\n";
-                        }
+                    if (m.id == id && count < 5) {
+                        cout << "- " << m.title << " (" << m.genre << ")\n";
+                        count++;
                     }
                 }
-                break;
             }
+        }
 
-            case 4: {
-                int userId;
-                cout << "Enter user ID: ";
-                cin >> userId;
+        else if (choice == 2) {
+            vector<int> recsCF = getCFRecommendations(matchedUserId, users);
 
-                if (users.find(userId) == users.end()) {
-                    cout << "User not found!\n";
-                    break;
-                }
-
-                cout << "\nCollaborative Filtering Recommended Movies:\n";
-
-// ISA: This section will use your collaborative filtering function.
-
-                vector<int> recsCF = getCFRecommendations(userId, users);
-
-                for (int id : recsCF) {
-                    for (const Movie& m : movies) {
-                        if (m.id == id) {
-                            cout << m.title << " (" << m.genre << ")\n";
-                        }
+            cout << "\nWe Think You Would LOVE These ❤️:\n";
+            int count = 0;
+            for (int id : recsCF) {
+                for (const Movie& m : movies) {
+                    if (m.id == id && count < 5) {
+                        cout << "- " << m.title << " (" << m.genre << ")\n";
+                        count++;
                     }
                 }
-                break;
             }
+        }
 
-            case 5:
-                cout << "Goodbye!\n";
-                break;
-
-            default:
-                cout << "Invalid option. Try again.\n";
+        else if (choice == 3) {
+            cout << "Goodbye!\n";
         }
     }
 
