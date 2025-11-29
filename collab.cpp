@@ -1,105 +1,77 @@
-#include "models.h"
 #include <unordered_map>
 #include <vector>
+#include <cmath>
+#include <algorithm>
+#include "models.h"
+
 using namespace std;
 
+static double cosineSimilarity(const User& a, const User& b) {
+    double dot = 0.0, magA = 0.0, magB = 0.0;
 
-std::vector<int> getCFRecommendations(
-    int targetUserId,
-    const std::unordered_map<int, User>& users){
-    set <int> list_of_movies;
-    const User & target_user = users.at(targetUserId);
-    vector < pair<double, int>> ratings_list;
-    vector<int> movie_rec;
-
-    // This will store the movies into a set
-    for (auto a : users)
-    {
-
-        for (auto b : a.second.ratings)
-        {
-         
-
-            list_of_movies.insert(b.first);
+    for (const auto& [movieId, ratingA] : a.ratings) {
+        if (b.ratings.count(movieId)) {
+            double ratingB = b.ratings.at(movieId);
+            dot += ratingA * ratingB;
         }
-   }
-
-    // This code block will rate movies
-    for (int id_num : list_of_movies)
-    {
-        long double rating_number=0;
-        long double balancer=0;
-
-        if (target_user.ratings.count(id_num)==0)
-
-        {
-
-            for (auto a : users)
-            {
-
-                if (targetUserId != a.first && a.second.ratings.count(id_num)!=0)
-                {
-                    long double count_1=0;
-                    long double count_2=0;
-                    for (auto b : target_user.ratings)
-                    {
-
-                        if (a.second.ratings.count(b.first))
-                        {
-
-                            count_1 = count_1 + 1;
-                            long double temp = abs(a.second.ratings.at(b.first) - target_user.ratings.at(b.first ));
-                            count_2 += (5 - temp) / 5;
-                        }
-                    }
-                    if (count_1 >= 1)
-                    {
-
-                        
-                        count_2 /= count_1;
-                        balancer += count_2;
-                        rating_number += count_2 * a.second.ratings.at(id_num);
-                       
-                    }
-
-                }
-           
-
-
-
-            }
-
-
-        }
-
-        else
-        {
-
-            continue;
-        }
-
-        if (balancer >= 1)
-        {
-
-            long double final_rating = rating_number / balancer;
-            rating_list.push_back({ final_rating,id_num });
-        }
-
-
+        magA += ratingA * ratingA;
     }
- // This sorts are movie rating list.
-    sort(rating_list.begin(), rating_list.end());
-    reverse(rating_list.begin(), rating_list.end());
-    for (auto [rating,movieId] : rating_list)
-    {
-
-        movie_rec.push_back(movieId);
+    for (const auto& [_, ratingB] : b.ratings) {
+        magB += ratingB * ratingB;
     }
-    return movie_rec;
+
+    if (magA == 0 || magB == 0) return 0.0;
+    return dot / (sqrt(magA) * sqrt(magB));
 }
-// : This file is where you build the collaborative filtering system.
-// For the target user, compare their rating patterns to other users,
-// estimate what rating the target user would give to movies they haven't rated,
-// and then return the movie IDs with the strongest predicted ratings.
-// This should be a full second algorithm so we can compare it against KNN.
+
+vector<int> getCFRecommendations(int targetUserId,
+                                 const unordered_map<int, User>& users)
+{
+    const User& target = users.at(targetUserId);
+    vector<pair<double, int>> similarityList;
+
+    for (const auto& [id, user] : users) {
+        if (id == targetUserId) continue;
+        double sim = cosineSimilarity(target, user);
+        if (sim > 0)
+            similarityList.push_back({ sim, id });
+    }
+
+    sort(similarityList.begin(), similarityList.end(),
+         [](auto& a, auto& b){ return a.first > b.first; });
+
+    vector<double> movieScore(1001, 0.0);
+    vector<double> movieWeight(1001, 0.0);
+
+    int neighbors = min((int)similarityList.size(), 20);
+
+    for (int i = 0; i < neighbors; i++) {
+        double sim = similarityList[i].first;
+        int uid = similarityList[i].second;
+
+        for (auto& [movieId, rating] : users.at(uid).ratings) {
+            if (target.ratings.count(movieId)) continue;
+            movieScore[movieId] += sim * rating;
+            movieWeight[movieId] += sim;
+        }
+    }
+
+    vector<pair<double,int>> ranking;
+    for (int movieId = 1; movieId <= 1000; movieId++) {
+        if (movieWeight[movieId] > 0) {
+            double score = movieScore[movieId] / movieWeight[movieId];
+            ranking.push_back({ score, movieId });
+        }
+    }
+
+    sort(ranking.begin(), ranking.end(),
+         [](auto& a, auto& b){ return a.first > b.first; });
+
+    vector<int> top5;
+    for (int i = 0; i < 5 && i < ranking.size(); i++) {
+        top5.push_back(ranking[i].second);
+    }
+
+    return top5;
+}
 
