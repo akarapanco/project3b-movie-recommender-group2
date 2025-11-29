@@ -1,121 +1,79 @@
-#include <vector>
 #include <unordered_map>
-#include "models.h"
+#include <vector>
 #include <cmath>
+#include <algorithm>
+#include "models.h"
+
 using namespace std;
 
-// ISA: Your job in this file is to write the full KNN recommendation function.
-std::vector<int> getRecommendations(
-    int targetUserId,
-    const std::unordered_map<int, User>& users,
-    int k)
+static double euclideanDistance(const User& a, const User& b) {
+    double sum = 0.0;
+
+    for (const auto& [movieId, ratingA] : a.ratings) {
+        if (b.ratings.count(movieId)) {
+            double diff = ratingA - b.ratings.at(movieId);
+            sum += diff * diff;
+        }
+    }
+
+    return sqrt(sum);
+}
+
+vector<int> getKNN(int targetId,
+                   const unordered_map<int, User>& users,
+                   int K)
 {
+    const User& target = users.at(targetId);
 
+    vector<pair<double,int>> distances;
 
-    vector <int> movie_IDs;
-    // This checks if user exists
-    if (users.count(targetUserId) == 0)
-    {
+    for (const auto& [uid, user] : users) {
+        if (uid == targetId) continue;
 
-        return movie_IDs;
+        double dist = euclideanDistance(target, user);
+        if (dist > 0)
+            distances.push_back({ dist, uid });
     }
 
-    vector<pair<double, int >> totals;
-    const User& check = users.at(targetUserId);
-    // the below code will do distance calculations and store into a vector.
-    for (auto a : users)
-    {
+    sort(distances.begin(), distances.end(),
+         [](auto& a, auto& b){ return a.first < b.first; });
 
-        if (a.first != targetUserId)
-        {
+    int neighbors = min(K, (int)distances.size());
 
+    vector<double> score(1001, 0.0);
+    vector<double> weight(1001, 0.0);
 
+    for (int i = 0; i < neighbors; i++) {
+        double dist = distances[i].first;
+        int uid = distances[i].second;
 
+        double w = 1.0 / (dist + 1e-6);
 
+        for (auto& [movieId, rating] : users.at(uid).ratings) {
+            if (target.ratings.count(movieId)) continue;
 
-
-
-
-            double total=0;
-            int count=0;
-            
-            for (auto b : check.ratings)
-            {
-
-                if (a.second.ratings.count(b.first))
-                {
-
-                    double num = b.second - a.second.ratings.at(b.first);
-                    count = count + 1;
-                    total += num * num;
-                }
-            }
-           
-            if (count > 0)
-            {
-                totals.push_back({ sqrt(total / count),a.first });
-
-            }
+            score[movieId] += w * rating;
+            weight[movieId] += w;
         }
     }
 
-    sort(totals.begin(), totals.end());
-
-    // The below code block will store the k nearest neighbors into a vector
-
-  //  int min_num = min(totals.size(), k);
-    vector <int> KN;
-
-    for (int i = 0; i < min((int)totals.size(), k); i++)
-
-    {
-
-        KN.push_back(totals[i].second);
-    }
-
-    unordered_map <int, int> counter;
-    unordered_map <int, double> numbers;
-    // this block of code will store data into a map to help calculate ratings
-    for (int c : KN)
-    {
-
-        const User& nearest = users.at(c);
-
-        for (auto d : nearest.ratings)
-        {
-            if (check.ratings.count(d.first) == 0)
-            {
-
-                counter[d.first] = counter[d.first] + 1;
-                numbers[d.first] = numbers[d.first]+ d.second;
-            }
-
+    vector<pair<double,int>> ranking;
+    for (int movieId = 1; movieId <= 1000; movieId++) {
+        if (weight[movieId] > 0) {
+            double avg = score[movieId] / weight[movieId];
+            ranking.push_back({ avg, movieId });
         }
     }
-    // this section of code calculates ratings and stores into a vector
-    vector<pair<double, int>> ratings;
-    for (auto m : numbers)
-    {
-        long double x = m.second / counter[m.first];
-        ratings.push_back({x,m.first });
+
+    sort(ranking.begin(), ranking.end(),
+         [](auto& a, auto& b){ return a.first > b.first; });
+
+    vector<int> top5;
+    for (int i = 0; i < 5 && i < ranking.size(); i++) {
+        top5.push_back(ranking[i].second);
     }
 
-    sort(ratings.begin(), ratings.end());
-    reverse(ratings.begin(), ratings.end());
+    return top5;
+}
 
-
-    for (auto i : ratings)
-    {
-
-        movie_IDs.push_back(i.second);
-    }
-    
-    return movie_IDs;
-     }
-
-
-// You will take the target user, measure how similar they are to every other user,
-// pick the closest users, look at the movies those users rated, and recommend
-// the movies the target user hasn’t seen yet. The function should return a list
-// of movie IDs that you think the target user would like based on similar users.
 
