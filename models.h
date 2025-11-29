@@ -9,7 +9,6 @@ struct Movie {
     int id;
     std::string title;
     std::string genre;
-    double averageRating;
 };
 
 struct User {
