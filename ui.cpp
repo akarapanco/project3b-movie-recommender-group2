@@ -8,101 +8,93 @@ using namespace std;
 
 vector<Movie> loadMovies(const string& filename);
 unordered_map<int, User> loadUserRatings(const string& filename);
+unordered_map<int, string> loadUserGenres(const string& filename);
+int matchUserToProfile(const string& favGenre, int favMovie,
+                       const unordered_map<int, string>& genres,
+                       const unordered_map<int, User>& users);
 
-vector<int> getRecommendations(int targetUserId,
+vector<int> getRecommendations(int userId,
                                const unordered_map<int, User>& users,
                                int k);
 
-// Isa: implement Collaborative Filtering logic in collab.cpp
-vector<int> getCFRecommendations(int targetUserId,
+vector<int> getCFRecommendations(int userId,
                                  const unordered_map<int, User>& users);
+
+void showMenu() {
+    cout << "\nWhat should I watch next?\n";
+    cout << "1. People With Similar Taste Also Liked (KNN)\n";
+    cout << "2. We Think You Would LOVE These ❤️ (CF)\n";
+    cout << "3. Exit\n";
+    cout << "Choose an option: ";
+}
 
 int main() {
     vector<Movie> movies = loadMovies("resources/movies.csv");
     unordered_map<int, User> users = loadUserRatings("resources/user_ratings.csv");
+    unordered_map<int, string> genres = loadUserGenres("resources/user_genres.csv");
 
-    if (movies.empty() || users.empty()) {
+    if (movies.empty() || users.empty() || genres.empty()) {
         cout << "Error loading data.\n";
         return 1;
     }
 
-    string username;
-    string favGenre;
-
-    cout << "\n==============================\n";
-    cout << "     What Should I Watch?\n";
-    cout << "==============================\n\n";
-
+    string name;
     cout << "Enter your name: ";
-    cin >> username;
+    cin >> name;
 
+    string favGenre;
     cout << "Enter your favorite genre: ";
     cin >> favGenre;
 
-    int matchedUserId = -1;
+    int favMovieId;
+    cout << "Enter your favorite movie ID: ";
+    cin >> favMovieId;
 
-    for (const auto& [uid, user] : users) {
-        for (const auto& rating : user.ratings) {
-            for (const Movie& m : movies) {
-                if (m.id == rating.first && m.genre == favGenre) {
-                    matchedUserId = uid;
-                    break;
-                }
-            }
-            if (matchedUserId != -1) break;
-        }
-        if (matchedUserId != -1) break;
-    }
-
+    int matchedUserId = matchUserToProfile(favGenre, favMovieId, genres, users);
     if (matchedUserId == -1) {
-        matchedUserId = 1001;
+        cout << "Could not match you to a viewer profile.\n";
+        return 0;
     }
+
+    cout << "\nProfile matched. Let's find your next movie.\n";
 
     int choice = 0;
-
     while (choice != 3) {
-        cout << "\n==============================\n";
-        cout << "   What Should I Watch Next?\n";
-        cout << "==============================\n";
-        cout << "1. People With Similar Taste Also Liked (KNN)\n";
-        cout << "2. We Think You Would LOVE These ❤️ (CF)\n";
-        cout << "3. Exit\n";
-        cout << "Choose an option: ";
-
+        showMenu();
         cin >> choice;
 
-        if (choice == 1) {
-            vector<int> recs = getRecommendations(matchedUserId, users, 5);
+        switch (choice) {
 
-            cout << "\nPeople With Similar Taste Also Liked:\n";
-            int count = 0;
-            for (int id : recs) {
-                for (const Movie& m : movies) {
-                    if (m.id == id && count < 5) {
-                        cout << "- " << m.title << " (" << m.genre << ")\n";
-                        count++;
+            case 1: {
+                vector<int> recs = getRecommendations(matchedUserId, users, 5);
+                cout << "\nPeople With Similar Taste Also Liked:\n";
+                for (int id : recs) {
+                    for (auto& m : movies) {
+                        if (m.id == id)
+                            cout << m.title << " (" << m.genre << ")\n";
                     }
                 }
+                break;
             }
-        }
 
-        else if (choice == 2) {
-            vector<int> recsCF = getCFRecommendations(matchedUserId, users);
-
-            cout << "\nWe Think You Would LOVE These ❤️:\n";
-            int count = 0;
-            for (int id : recsCF) {
-                for (const Movie& m : movies) {
-                    if (m.id == id && count < 5) {
-                        cout << "- " << m.title << " (" << m.genre << ")\n";
-                        count++;
+            case 2: {
+                vector<int> recs = getCFRecommendations(matchedUserId, users);
+                cout << "\nWe Think You Would LOVE These ❤️:\n";
+                for (int id : recs) {
+                    for (auto& m : movies) {
+                        if (m.id == id)
+                            cout << m.title << " (" << m.genre << ")\n";
                     }
                 }
+                break;
             }
-        }
 
-        else if (choice == 3) {
-            cout << "Goodbye!\n";
+            case 3:
+                cout << "Goodbye!\n";
+                break;
+
+            default:
+                cout << "Invalid option.\n";
         }
     }
 
