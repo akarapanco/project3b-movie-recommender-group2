@@ -1,58 +1,38 @@
-#include <string>
-#include <unordered_map>
-#include <vector>
 #include "models.h"
+#include <unordered_map>
+#include <string>
+#include <vector>
+using namespace std;
 
-struct UserProfile {
-    int id;
-    std::string genre;
-};
+int matchUserToProfile(const string& favGenre,
+                       int favMovie,
+                       const unordered_map<int, string>& genres,
+                       const unordered_map<int, User>& users) 
+{
+    int bestMatch = -1;
+    int bestScore = -1;
 
-std::unordered_map<int, std::string> loadUserGenres(const std::string& filename) {
-    std::unordered_map<int, std::string> genreMap;
-    std::ifstream file(filename);
-    std::string line;
+    for (auto& entry : users) {
+        int uid = entry.first;
 
-    std::getline(file, line); // skip header
-
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string idStr, genre;
-
-        std::getline(ss, idStr, ',');
-        std::getline(ss, genre, ',');
-
-        genreMap[std::stoi(idStr)] = genre;
-    }
-
-    return genreMap;
-}
-int matchUserToProfile(
-    const std::string& favGenre,
-    int favMovie,
-    const std::unordered_map<int, std::string>& genres,
-    const std::unordered_map<int, User>& users
-) {
-    int bestUser = -1;
-    int bestScore = -999;
-
-    for (const auto& [uid, genre] : genres) {
         int score = 0;
 
-        if (genre == favGenre)
-            score += 5;
-        auto it = users.find(uid);
-        if (it != users.end()) {
-            if (it->second.ratings.find(favMovie) != it->second.ratings.end()) {
-                score += 3;
-            }
+        auto it = genres.find(uid);
+        if (it != genres.end()) {
+            string g = it->second;
+
+            if (g == favGenre) score += 2;
+        }
+
+        if (users.at(uid).ratings.count(favMovie)) {
+            score += 3;
         }
 
         if (score > bestScore) {
             bestScore = score;
-            bestUser = uid;
+            bestMatch = uid;
         }
     }
 
-    return bestUser;
+    return bestMatch;
 }
