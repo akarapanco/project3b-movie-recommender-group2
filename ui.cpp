@@ -43,7 +43,7 @@ int main() {
     cout << "            ✨ WELCOME TO WHAT SHOULD I WATCH ✨              \n";
     cout << "=============================================================\n\n";
 
-    // QUESTION 1
+
     string genre = askQuestion(
         "╔═══════════════════════════════════════════════════════╗\n"
         "║ 💖  WHAT'S YOUR ALL-TIME FAVORITE MOVIE GENRE?        ║\n"
@@ -55,7 +55,7 @@ int main() {
 
     clearScreen();
 
-    // QUESTION 2
+
     string mood = askQuestion(
         "╔════════════════════════════════════════════════════════╗\n"
         "║ 🎭  WHAT MOOD ARE YOU IN TONIGHT?                      ║\n"
@@ -67,7 +67,7 @@ int main() {
 
     clearScreen();
 
-    // QUESTION 3
+
     string time = askQuestion(
         "╔════════════════════════════════════════════════════════╗ \n"
         "║ ⏳  HOW MUCH TIME DO YOU HAVE RIGHT NOW?               ║\n"
@@ -79,7 +79,7 @@ int main() {
 
     clearScreen();
 
-    // QUESTION 4
+
     string rewatch = askQuestion(
         "╔════════════════════════════════════════════════════════╗\n"
         "║ 🔁  DO YOU WANT SOMETHING BRAND NEW OR A COMFORT       ║\n"
@@ -92,7 +92,7 @@ int main() {
 
     clearScreen();
 
-    // QUESTION 5
+  
     string island = askQuestion(
         "╔════════════════════════════════════════════════════════╗\n"
         "║ 🏝️  IF YOU WERE STRANDED ON AN ISLAND FOREVER…         ║\n"
@@ -106,7 +106,7 @@ int main() {
 
     clearScreen();
 
-    // QUESTION 6
+
     string comfort = askQuestion(
         "╔════════════════════════════════════════════════════════╗\n"
         "║ 🍿  WHAT DO YOU CONSIDER A 'COMFORT MOVIE'?            ║\n"
@@ -118,7 +118,7 @@ int main() {
 
     clearScreen();
 
-    // QUESTION 7
+
     string energy = askQuestion(
         "╔════════════════════════════════════════════════════════╗\n"
         "║ ⚡  WHAT'S YOUR ENERGY LEVEL TONIGHT?                   ║\n"
