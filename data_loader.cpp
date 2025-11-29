@@ -2,27 +2,27 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unordered_map>
+#include <vector>
+using namespace std;
 
-std::vector<Movie> loadMovies(const std::string& filename) {
-    std::vector<Movie> movies;
-    std::ifstream file(filename);
+vector<Movie> loadMovies(const string& filename) {
+    vector<Movie> movies;
+    ifstream file(filename);
 
-    if (!file.is_open()) {
-        std::cerr << "Failed to open " << filename << "\n";
-        return movies;
-    }
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string idStr, title, genre;
 
-    std::string line;
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string idStr, title, genre;
+        getline(ss, idStr, ',');
+        getline(ss, title, ',');
+        getline(ss, genre, ',');
 
-        std::getline(ss, idStr, ',');
-        std::getline(ss, title, ',');
-        std::getline(ss, genre, ',');
+        if (idStr == "id") continue;
 
         Movie m;
-        m.id = std::stoi(idStr);
+        m.id = stoi(idStr);
         m.title = title;
         m.genre = genre;
         movies.push_back(m);
@@ -31,48 +31,49 @@ std::vector<Movie> loadMovies(const std::string& filename) {
     return movies;
 }
 
-std::unordered_map<int, User> loadUserRatings(const std::string& filename) {
-    std::unordered_map<int, User> users;
-    std::ifstream file(filename);
+unordered_map<int, User> loadUserRatings(const string& filename) {
+    unordered_map<int, User> users;
+    ifstream file(filename);
 
-    if (!file.is_open()) {
-        std::cerr << "Failed to open " << filename << "\n";
-        return users;
-    }
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string uStr, mStr, rStr;
 
-    std::string line;
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string userIdStr, movieIdStr, ratingStr;
+        getline(ss, uStr, ',');
+        getline(ss, mStr, ',');
+        getline(ss, rStr, ',');
 
-        std::getline(ss, userIdStr, ',');
-        std::getline(ss, movieIdStr, ',');
-        std::getline(ss, ratingStr, ',');
+        if (uStr == "user_id") continue;
 
-        int userId = std::stoi(userIdStr);
-        int movieId = std::stoi(movieIdStr);
-        double rating = std::stod(ratingStr);
+        int uid = stoi(uStr);
+        int mid = stoi(mStr);
+        double rating = stod(rStr);
 
-        users[userId].id = userId;
-        users[userId].ratings[movieId] = rating;
+        users[uid].id = uid;
+        users[uid].ratings[mid] = rating;
     }
 
     return users;
 }
 
-int main() {
-    std::vector<Movie> movies = loadMovies("resources/movies.csv");
-    std::unordered_map<int, User> users = loadUserRatings("resources/user_ratings.csv");
+unordered_map<int, string> loadUserGenres(const string& filename) {
+    unordered_map<int, string> ug;
+    ifstream file(filename);
 
-    std::cout << "Movies loaded: " << movies.size() << std::endl;
-    for (const Movie& m : movies) {
-        std::cout << m.id << " - " << m.title << " (" << m.genre << ")\n";
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string uStr, gStr;
+
+        getline(ss, uStr, ',');
+        getline(ss, gStr, ',');
+
+        if (uStr == "user_id") continue;
+
+        ug[stoi(uStr)] = gStr;
     }
 
-    std::cout << "\nUsers loaded: " << users.size() << std::endl;
-    for (const auto& [id, user] : users) {
-        std::cout << "User " << user.id << " rated " << user.ratings.size() << " movies.\n";
-    }
-
-    return 0;
+    return ug;
 }
+
