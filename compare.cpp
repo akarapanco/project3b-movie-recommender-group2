@@ -1,8 +1,8 @@
 #include <vector>
 #include <unordered_map>
 #include "models.h"
-#include "collab.cpp"
-#include "knn.cpp"
+#include "collab.h"
+#include "knn.h"
 using namespace std;
 
 void compare_two_programs(unordered_map <int, User>& users, int k, int targetUserId)
