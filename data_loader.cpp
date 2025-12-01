@@ -4,76 +4,76 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-using namespace std;
+#include <cctype>
+#include <algorithm>
 
-vector<Movie> loadMovies(const string& filename) {
-    vector<Movie> movies;
-    ifstream file(filename);
+std::vector<Movie> loadMovies(const std::string& filename) {
+    std::vector<Movie> list;
+    std::ifstream file(filename);
+    if (!file.is_open()) return list;
 
-    string line;
+    std::string line;
+    getline(file, line); 
+
     while (getline(file, line)) {
-        stringstream ss(line);
-        string idStr, title, genre;
+        std::stringstream ss(line);
+        std::string id, t, g;
 
-        getline(ss, idStr, ',');
-        getline(ss, title, ',');
-        getline(ss, genre, ',');
+        getline(ss, id, ',');
+        getline(ss, t, ',');
+        getline(ss, g, ',');
 
-        if (idStr == "id") continue;
+        if (id.empty() || !std::all_of(id.begin(), id.end(), ::isdigit)) {
+            std::cerr << "[loadMovies] Skipping bad line: " << line << "\n";
+            continue;
+        }
 
-        Movie m;
-        m.id = stoi(idStr);
-        m.title = title;
-        m.genre = genre;
-        movies.push_back(m);
+        try {
+            Movie m;
+            m.id = std::stoi(id);
+            m.title = t;
+            m.genre = g;
+            list.push_back(m);
+        } catch (...) {
+            std::cerr << "[loadMovies] Failed to parse line: " << line << "\n";
+        }
     }
-
-    return movies;
+    return list;
 }
 
-unordered_map<int, User> loadUserRatings(const string& filename) {
-    unordered_map<int, User> users;
-    ifstream file(filename);
+std::unordered_map<int, User> loadUserRatings(const std::string& filename) {
+    std::unordered_map<int, User> map;
+    std::ifstream file(filename);
+    if (!file.is_open()) return map;
 
-    string line;
+    std::string line;
+    getline(file, line);
+
     while (getline(file, line)) {
-        stringstream ss(line);
-        string uStr, mStr, rStr;
+        std::stringstream ss(line);
+        std::string u, m, r;
 
-        getline(ss, uStr, ',');
-        getline(ss, mStr, ',');
-        getline(ss, rStr, ',');
+        getline(ss, u, ',');
+        getline(ss, m, ',');
+        getline(ss, r, ',');
 
-        if (uStr == "user_id") continue;
+        if (u.empty() || m.empty() || r.empty()) {
+            std::cerr << "[loadUserRatings] Incomplete line: " << line << "\n";
+            continue;
+        }
 
-        int uid = stoi(uStr);
-        int mid = stoi(mStr);
-        double rating = stod(rStr);
+        try {
+            int uid = std::stoi(u);
+            int mid = std::stoi(m);
+            double rating = std::stod(r);
 
-        users[uid].id = uid;
-        users[uid].ratings[mid] = rating;
+            map[uid].id = uid;
+            map[uid].ratings[mid] = rating;
+        } catch (...) {
+            std::cerr << "[loadUserRatings] Failed to parse line: " << line << "\n";
+            continue;
+        }
     }
 
-    return users;
+    return map;
 }
-
-unordered_map<int, string> loadUserGenres(const string& filename) {
-    unordered_map<int, string> ug;
-    ifstream file(filename);
-
-    string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string uStr, gStr;
-
-        getline(ss, uStr, ',');
-        getline(ss, gStr, ',');
-
-        if (uStr == "user_id") continue;
-
-        ug[stoi(uStr)] = gStr;
-    }
-
-    return ug;
-}
-
