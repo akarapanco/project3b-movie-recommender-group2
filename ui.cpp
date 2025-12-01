@@ -3,168 +3,250 @@
 #include <unordered_map>
 #include <string>
 #include "models.h"
+#include <unordered_set>
+
 
 using namespace std;
 
 vector<Movie> loadMovies(const string& filename);
 unordered_map<int, User> loadUserRatings(const string& filename);
-string matchUserProfile(const string& genre, const string& mood, const string& time, const string& rewatch, const string& island, const string& comfort, const string& energy);
+int matchUserProfile(const string& q1, const string& q2, const string& q3,
+                     const string& q4, const string& q5,
+                     const string& q6, const string& q7);
+vector<int> getKNNRecommendations(int userId, const unordered_map<int, User>& users,
+                                  const vector<Movie>& movies, const string& preferredGenre);
 
-vector<int> getRecommendations(int userId, const unordered_map<int, User>& users, int k);
-vector<int> getCFRecommendations(int userId, const unordered_map<int, User>& users);
+vector<int> getCFRecommendations(int userId, const unordered_map<int, User>& users,
+                                  const vector<Movie>& movies, const string& preferredGenre,
+                                  const vector<int>& alreadyRecommended);
+
+
 
 void clearScreen() {
-    cout << string(50, '\n');
-}
-
-string askQuestion(const string& box) {
-    cout << box;
-    string answer;
-    cout << " → ";
-    cin >> answer;
-    return answer;
+    cout << string(1, '\n');
 }
 
 int main() {
-    vector<Movie> movies = loadMovies("resources/movies.csv");
-    unordered_map<int, User> users = loadUserRatings("resources/user_ratings.csv");
-
+    vector<Movie> movies = loadMovies("movies.csv");
+    unordered_map<int, User> users = loadUserRatings("user_ratings.csv");
+    
     if (movies.empty() || users.empty()) {
-        cout << "Error: Could not load data.\n";
+        cout <<  "Error: Could not load required data.\n";
         return 1;
     }
-
+    
     clearScreen();
+    
+    cout << R"(
+    __        __   _                            _          _   _             
+    \ \      / /__| | ___ ___  _ __ ___   ___  | |_ ___   | |_| |__   ___    
+     \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | __/ _ \  | __| '_ \ / _ \   
+      \ V  V /  __/ | (_| (_) | | | | | |  __/ | || (_) | | |_| | | |  __/   
+       \_/\_/ \___|_|\___\___/|_| |_| |_|\___|  \__\___/   \__|_| |_|\___|   
 
-    cout << "=============================================================\n";
-    cout << "            ✨ WELCOME TO WHAT SHOULD I WATCH ✨              \n";
+             "WHAT SHOULD YOU WATCH?" — Movie Recommender Quiz
+    )";
+
+    cout << "\n=============================================================\n";
+    cout << "✨ Ready to discover your next favorite movie?\n";
+    cout << "✨ Answer 7 quick questions and get personalized picks!\n";
     cout << "=============================================================\n\n";
+    
+    string q1, q2, q3, q4, q5, q6, q7;
+    
 
-    string genre = askQuestion(
-        "╔═══════════════════════════════════════════════════════╗\n"
-        "║ 💖  WHAT'S YOUR ALL-TIME FAVORITE MOVIE GENRE?        ║\n"
-        "║    A) Romance                                         ║\n"
-        "║    B) Thriller / Horror                               ║\n"
-        "║    C) Sci-Fi / Action                                 ║\n"
-        "║    D) Animation / Disney                              ║\n"
-        "╚═══════════════════════════════════════════════════════╝\n"
-    );
-
+    cout << "\n";
+    cout << "┌────────────────────────────────────────────────────────────┐\n";
+    cout << "│                ✨ QUESTION 1: MOVIE WORLD ✨                │\n";
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ What type of movie world pulls you in the most?            │\n";
+    cout << "│ a) A cozy, heart-melting world full of romance             │\n";
+    cout << "│ b) A mind-bending, futuristic universe of big ideas        │\n";
+    cout << "│ c) A magical, whimsical animated world                     │\n";
+    cout << "│ d) A thrilling, mysterious world full of suspense          │\n";
+    cout << "└────────────────────────────────────────────────────────────┘\n→ ";
+    cin >> q1;
+    
+    cout << "\n";
+    cout << "┌────────────────────────────────────────────────────────────┐\n";
+    cout << "│            ✨ QUESTION 2: EMOTIONAL EXPERIENCE ✨           │\n";
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ What emotional experience are you looking for today?       │\n";
+    cout << "│ a) Romantic, sweet, or emotionally deep                    │\n";
+    cout << "│ b) Exciting, intense, or action-packed                     │\n";
+    cout << "│ c) Comforting, adorable, or lighthearted                   │\n";
+    cout << "│ d) Surprising, dark, or thought-provoking                  │\n";
+    cout << "└────────────────────────────────────────────────────────────┘\n→ ";
+    cin >> q2;
+    
+    cout << "\n";
+    cout << "┌────────────────────────────────────────────────────────────┐\n";
+    cout << "│               ✨ QUESTION 3: FAVORITE MOMENT ✨             │\n";
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ Which movie moment would you enjoy the most?               │\n";
+    cout << "│ a) Two characters finally confessing their love            │\n";
+    cout << "│ b) A high-stakes chase or dramatic showdown                │\n";
+    cout << "│ c) A funny sidekick or heartwarming animated moment        │\n";
+    cout << "│ d) A shocking reveal that changes everything               │\n";
+    cout << "└────────────────────────────────────────────────────────────┘\n→ ";
+    cin >> q3;
+    
+    cout << "\n";
+    cout << "┌────────────────────────────────────────────────────────────┐\n";
+    cout << "│               ✨ QUESTION 4: STORY VALUES ✨                │\n";
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ What do you value most in a movie’s story?                 │\n";
+    cout << "│ a) Romance, relationships, and emotions                    │\n";
+    cout << "│ b) Adventure, tension, and adrenaline                      │\n";
+    cout << "│ c) Creativity, imagination, and world-building             │\n";
+    cout << "│ d) Mystery, suspense, and clever storytelling              │\n";
+    cout << "└────────────────────────────────────────────────────────────┘\n→ ";
+    cin >> q4;
+    
+    cout << "\n";
+    cout << "┌──────────────────────────────────────────────────────────────────────────┐\n";
+    cout << "│                      ✨ QUESTION 5: DESERT ISLAND ✨                      │\n";
+    cout << "├──────────────────────────────────────────────────────────────────────────┤\n";
+    cout << "│ If you were stranded and could only watch one genre forever, pick one:   │\n";
+    cout << "│ a) Romance  b) Thriller  c) Sci-Fi  d) Animation                         │\n";
+    cout << "└──────────────────────────────────────────────────────────────────────────┘\n→ ";
+    cin >> q5;
+    
+    cout << "\n";
+    cout << "┌───────────────────────────────────────────────────────────────┐\n";
+    cout << "│              ✨ QUESTION 6: PACE PREFERENCE ✨                 │\n";
+    cout << "├───────────────────────────────────────────────────────────────┤\n";
+    cout << "│ What pace do you prefer your movies to have?                  │\n";
+    cout << "│ a) Slow, emotional, and character-driven                      │\n";
+    cout << "│ b) Fast, energetic, and unpredictable                         │\n";
+    cout << "│ c) Light, easy to follow, and fun                             │\n";
+    cout << "│ d) Medium pace but full of tension and buildup                │\n";
+    cout << "└───────────────────────────────────────────────────────────────┘\n→ ";
+    cin >> q6;
+    
+    cout << "\n";
+    cout << "┌────────────────────────────────────────────────────────────┐\n";
+    cout << "│          ✨ QUESTION 7: MAIN CHARACTER VIBES ✨             │\n";
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ What kind of main character do you connect with most?      │\n";
+    cout << "│ a) Someone falling in love or growing emotionally          │\n";
+    cout << "│ b) A brave hero fighting through danger                    │\n";
+    cout << "│ c) A lovable, quirky, animated character                   │\n";
+    cout << "│ d) A smart thinker solving mysteries or secrets            │\n";
+    cout << "└────────────────────────────────────────────────────────────┘\n→ ";
+    cin >> q7;
+    
     clearScreen();
-
-    string mood = askQuestion(
-        "╔═══════════════════════════════════════════════════════╗\n"
-        "║ 🎭  WHAT MOOD ARE YOU IN TONIGHT?                     ║\n"
-        "║    A) Emotional / Crying                              ║\n"
-        "║    B) Excited / Edge of seat                          ║\n"
-        "║    C) Dreamy / Escaping reality                       ║\n"
-        "║    D) Light / Comfort                                 ║\n"
-        "╚═══════════════════════════════════════════════════════╝\n"
-    );
-
-    clearScreen();
-
-    string time = askQuestion(
-        "╔═══════════════════════════════════════════════════════╗\n"
-        "║ ⏳  HOW MUCH TIME DO YOU HAVE RIGHT NOW?              ║\n"
-        "║    A) Under 90 minutes                                ║\n"
-        "║    B) About 2 hours                                   ║\n"
-        "║    C) A long movie is fine                            ║\n"
-        "║    D) Anything works                                  ║\n"
-        "╚═══════════════════════════════════════════════════════╝\n"
-    );
-
-    clearScreen();
-
-    string rewatch = askQuestion(
-        "╔═══════════════════════════════════════════════════════╗\n"
-        "║ 🔁  NEW MOVIE OR A COMFORT REWATCH?                   ║\n"
-        "║    A) Brand new                                       ║\n"
-        "║    B) Classic but not boring                          ║\n"
-        "║    C) Total comfort movie                             ║\n"
-        "║    D) Surprise me                                     ║\n"
-        "╚═══════════════════════════════════════════════════════╝\n"
-    );
-
-    clearScreen();
-
-    string island = askQuestion(
-        "╔═══════════════════════════════════════════════════════╗\n"
-        "║ 🏝️  STRANDED FOREVER — WHAT GENRE DO YOU PICK?       ║\n"
-        "║    A) Romance                                         ║\n"
-        "║    B) Thriller / Horror                               ║\n"
-        "║    C) Sci-Fi / Action                                 ║\n"
-        "║    D) Animation / Disney                              ║\n"
-        "╚═══════════════════════════════════════════════════════╝\n"
-    );
-
-    clearScreen();
-
-    string comfort = askQuestion(
-        "╔═══════════════════════════════════════════════════════╗\n"
-        "║ 🍿  WHAT IS *YOUR* IDEA OF A COMFORT MOVIE?           ║\n"
-        "║    A) Rom-Com                                         ║\n"
-        "║    B) Thriller                                        ║\n"
-        "║    C) Sci-Fi / Fantasy                                ║\n"
-        "║    D) Disney / Animation                              ║\n"
-        "╚═══════════════════════════════════════════════════════╝\n"
-    );
-
-    clearScreen();
-
-    string energy = askQuestion(
-        "╔═══════════════════════════════════════════════════════╗\n"
-        "║ ⚡  WHAT'S YOUR ENERGY LEVEL TONIGHT?                 ║\n"
-        "║    A) Low – something chill                           ║\n"
-        "║    B) Medium – can handle a plot                      ║\n"
-        "║    C) High – give me excitement                       ║\n"
-        "║    D) Depends on the movie                            ║\n"
-        "╚═══════════════════════════════════════════════════════╝\n"
-    );
-
-    clearScreen();
-
-    string matchedUserIdStr =
-        matchUserProfile(genre, mood, time, rewatch, island, comfort, energy);
-    int matchedUserId = stoi(matchedUserIdStr);
-
+    
+    int matchedUserId = matchUserProfile(q1, q2, q3, q4, q5, q6, q7);
+    if (!users.count(matchedUserId)) {
+        cout << "❌ Sorry, we couldn't match your preferences to a known user.\n";
+        return 1;
+    }
+    
+    bool knnShown = false;
+    bool cfShown = false;
     int choice = 0;
-
+    
+    unordered_set<int> shownIds;
+    vector<int> knnRecs;
+    vector<int> cfRecs;
+    
     while (choice != 3) {
-        cout << "=============================================================\n";
-        cout << "             🎬 WHAT SHOULD YOU WATCH NEXT? 🎬               \n";
-        cout << "=============================================================\n";
-        cout << "1. People With Similar Taste Also Liked (KNN)\n";
-        cout << "2. We Think You Would LOVE These ❤️ (CF)\n";
-        cout << "3. Exit\n";
-        cout << "\nChoose an option: ";
+        cout << "\n";
+        cout << "╔═════════════════════════════════════════════════════════════╗\n";
+        cout << "║               🎬 WHAT SHOULD YOU WATCH NEXT?                ║\n";
+        cout << "╠═════════════════════════════════════════════════════════════╣\n";
+        
+        if (!knnShown)
+            cout << "║ 1. People With Similar Taste Also Liked (KNN)               ║\n";
+        if (!cfShown)
+            cout << "║ 2. We Think You Would LOVE These ❤️ (CF)                     ║\n";
+        
+        cout << "║ 3. Exit                                                     ║\n";
+        cout << "╚═════════════════════════════════════════════════════════════╝\n→ ";
+        
         cin >> choice;
-
-        if (choice == 1) {
-            vector<int> recs = getRecommendations(matchedUserId, users, 5);
+        
+        clearScreen();
+        string preferredGenre;
+        if (q5 == "a") preferredGenre = "Romance";
+        else if (q5 == "b") preferredGenre = "Thriller";
+        else if (q5 == "c") preferredGenre = "Sci-Fi";
+        else if (q5 == "d") preferredGenre = "Animation";
+        
+        if (choice == 1 && !knnShown) {
             cout << "\n🎥 People With Similar Taste Also Liked:\n\n";
-            for (int id : recs) {
-                for (const Movie& m : movies)
-                    if (m.id == id) cout << "• " << m.title << " (" << m.genre << ")\n";
+            
+            vector<int> rawKnn = getKNNRecommendations(matchedUserId, users, movies, preferredGenre);
+            
+            for (int id : rawKnn) {
+                if (!shownIds.count(id)) {
+                    knnRecs.push_back(id);
+                    shownIds.insert(id);
+                }
+                if (knnRecs.size() >= 5) break;
             }
-            cout << "\n";
+            
+            if (knnRecs.empty()) {
+                cout << "⚠️ No recommendations found. Showing top movies instead:\n";
+                for (int i = 0; i < 5 && i < movies.size(); ++i)
+                    cout << "• " << movies[i].title << "\n";
+            } else {
+                for (int id : knnRecs)
+                    for (const Movie& m : movies)
+                        if (m.id == id)
+                            cout << "• " << m.title << "\n";
+            }
+            
+            knnShown = true;
         }
-
-        else if (choice == 2) {
-            vector<int> recs = getCFRecommendations(matchedUserId, users);
+        
+        else if (choice == 2 && !cfShown) {
             cout << "\n❤️ Movies We Think You'll LOVE:\n\n";
-            for (int id : recs) {
-                for (const Movie& m : movies)
-                    if (m.id == id) cout << "• " << m.title << " (" << m.genre << ")\n";
+            
+            vector<int> rawCf = getCFRecommendations(matchedUserId, users, movies, preferredGenre, knnRecs);
+            
+            for (int id : rawCf) {
+                if (!shownIds.count(id)) {
+                    cfRecs.push_back(id);
+                    shownIds.insert(id);
+                }
+                if (cfRecs.size() >= 5) break;
             }
-            cout << "\n";
+            
+            if (cfRecs.empty()) {
+                cout << "⚠️ No CF results found. Here's what's trending:\n";
+                for (int i = 0; i < 5 && i < movies.size(); ++i)
+                    cout << "• " << movies[i].title << "\n";
+            } else {
+                for (int id : cfRecs)
+                    for (const Movie& m : movies)
+                        if (m.id == id)
+                            cout << "• " << m.title << "\n";
+            }
+            
+            cfShown = true;
         }
-
+        
         else if (choice == 3) {
-            cout << "\nGoodbye! 🍿✨\n";
+            cout << "\n╔═════════════════════════════════════════════════╗\n";
+            cout << "║    👋 THANK YOU FOR USING THE RECOMMENDER!        ║\n";
+            cout << "║            Enjoy your movie night! 🍿✨            ║\n";
+            cout << "╚═══════════════════════════════════════════════════╝\n";
+            break;
+        }
+        
+        else {
+            cout << "⚠️ Invalid or already used option. Try again.\n";
+        }
+        
+        if (knnShown && cfShown) {
+            cout << "\n🎉 You've seen all available recommendations!\n";
+            cout << "You may now choose '3' to exit.\n";
         }
     }
-
+    
     return 0;
+    
 }
-
