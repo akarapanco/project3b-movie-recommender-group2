@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -41,20 +42,15 @@ void writeRatingsToCSV(const std::vector<Rating>& ratings, const std::string& fi
 }
 
 int main() {
-    const int totalUsers = 1100;
-    const int requiredUsers = 100;
+    const int totalUsers = 5000;
     const int movies = 100;
     const int ratingsPerUser = 20;
 
-    std::vector<Rating> ratings = generateRatings(1000, movies, ratingsPerUser);
-    std::vector<Rating> extra = generateRatings(requiredUsers, movies, ratingsPerUser);
-    for (auto& r : extra) r.userId += 1000;
-    ratings.insert(ratings.end(), extra.begin(), extra.end());
+    std::vector<Rating> ratings = generateRatings(totalUsers, movies, ratingsPerUser);
     writeRatingsToCSV(ratings, "user_ratings.csv");
 
     std::cout << "Finished: " << ratings.size()
-              << " ratings written to user_ratings.csv for users 1–1100.\n";
+              << " ratings written to user_ratings.csv for " << totalUsers << " users.\n";
 
     return 0;
 }
-
