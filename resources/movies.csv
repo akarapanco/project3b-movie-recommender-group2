@@ -43,20 +43,20 @@ id,title,genre
 42,Ratatouille,Animation
 43,Finding Dory,Animation
 44,Inside Out,Animation
-45,Inside Out 2,Animation
+45,WALL-E,Animation
 46,Zootopia,Animation
 47,Soul,Animation
 48,Brave,Animation
-49,Big Hero 6,Animation
+49,The Iron Giant,Animation
 50,Luca,Animation
 51,Onward,Animation
 52,The Incredibles,Animation
-53,The Incredibles 2,Animation
-54,Toy Story 2,Animation
-55,Toy Story 3,Animation
+53,Zootopia,Animation
+54,Ratatouille,Animation
+55,WALL-E,Animation
 56,Cars,Animation
-57,Cars 2,Animation
-58,Cars 3,Animation
+57,Monsters Inc,Animation
+58,Finding Nemo,Animation
 59,Monsters Inc,Animation
 60,Monsters University,Animation
 61,WALL-E,Animation
@@ -79,24 +79,23 @@ id,title,genre
 78,Wreck-It Ralph,Animation
 79,Ralph Breaks the Internet,Animation
 80,Kung Fu Panda,Animation
-81,Kung Fu Panda 2,Animation
-82,Kung Fu Panda 3,Animation
+81,Despicable Me,Animation
+82,Shrek,Animation
 83,How to Train Your Dragon,Animation
-84,How to Train Your Dragon 2,Animation
-85,How to Train Your Dragon 3,Animation
+84,The Lego Movie,Animation
+85,Frozen,Animation
 86,Sing,Animation
-87,Sing 2,Animation
+87,Coco,Animation
 88,The Croods,Animation
-89,The Croods 2,Animation
+89,Moana,Animation
 90,Hotel Transylvania,Animation
-91,Hotel Transylvania 2,Animation
-92,Hotel Transylvania 3,Animation
+91,Cloudy with a Chance of Meatballs,Animation
+92,The Good Dinosaur,Animation
 93,Clueless,Comedy
-94,10 Things I Hate About You,Romance
+94,Me Before You,Romance
 95,The Princess Diaries,Romance
 96,Knives Out,Mystery
 97,Get Out,Horror
 98,A Quiet Place,Horror
 99,Spider-Man: Into the Spider-Verse,Superhero
 100,Black Panther,Superhero
-
