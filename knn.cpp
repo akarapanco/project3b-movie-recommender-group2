@@ -1,79 +1,61 @@
-#include <unordered_map>
 #include <vector>
-#include <cmath>
+#include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
+#include <cmath>
 #include "models.h"
+#include "utils.h"
 
-using namespace std;
+std::vector<int> getKNNRecommendations(
+    int userId,
+    const std::unordered_map<int, User>& users,
+    const std::vector<Movie>& movies,
+    const std::string& preferredGenre
+) {
+    if (!users.count(userId)) return {};
 
-static double euclideanDistance(const User& a, const User& b) {
-    double sum = 0.0;
+    const User& target = users.at(userId);
+    std::vector<std::pair<int, double>> similarities;
 
-    for (const auto& [movieId, ratingA] : a.ratings) {
-        if (b.ratings.count(movieId)) {
-            double diff = ratingA - b.ratings.at(movieId);
-            sum += diff * diff;
-        }
+    for (const auto& [otherId, otherUser] : users) {
+        if (otherId == userId) continue;
+        double sim = cosineSimilarity(target, otherUser);
+        if (sim > 0.0) similarities.emplace_back(otherId, sim);
     }
 
-    return sqrt(sum);
-}
+    std::sort(similarities.begin(), similarities.end(),
+              [](const auto& a, const auto& b) { return a.second > b.second; });
 
-vector<int> getKNN(int targetId,
-                   const unordered_map<int, User>& users,
-                   int K)
-{
-    const User& target = users.at(targetId);
+    std::unordered_map<int, double> movieScores;
+    int k = 5, neighborsChecked = 0;
 
-    vector<pair<double,int>> distances;
-
-    for (const auto& [uid, user] : users) {
-        if (uid == targetId) continue;
-
-        double dist = euclideanDistance(target, user);
-        if (dist > 0)
-            distances.push_back({ dist, uid });
-    }
-
-    sort(distances.begin(), distances.end(),
-         [](auto& a, auto& b){ return a.first < b.first; });
-
-    int neighbors = min(K, (int)distances.size());
-
-    vector<double> score(1001, 0.0);
-    vector<double> weight(1001, 0.0);
-
-    for (int i = 0; i < neighbors; i++) {
-        double dist = distances[i].first;
-        int uid = distances[i].second;
-
-        double w = 1.0 / (dist + 1e-6);
-
-        for (auto& [movieId, rating] : users.at(uid).ratings) {
+    for (const auto& [neighborId, sim] : similarities) {
+        if (neighborsChecked >= k) break;
+        const auto& neighbor = users.at(neighborId);
+        bool added = false;
+        for (const auto& [movieId, rating] : neighbor.ratings) {
             if (target.ratings.count(movieId)) continue;
 
-            score[movieId] += w * rating;
-            weight[movieId] += w;
+            auto it = std::find_if(movies.begin(), movies.end(),
+                [&](const Movie& m) { return m.id == movieId && m.genre == preferredGenre; });
+
+            if (it != movies.end()) {
+                movieScores[movieId] += rating * sim;
+                added = true;
+            }
         }
+        if (added) ++neighborsChecked;
     }
 
-    vector<pair<double,int>> ranking;
-    for (int movieId = 1; movieId <= 1000; movieId++) {
-        if (weight[movieId] > 0) {
-            double avg = score[movieId] / weight[movieId];
-            ranking.push_back({ avg, movieId });
-        }
+    std::vector<std::pair<int, double>> ranked(movieScores.begin(), movieScores.end());
+    std::sort(ranked.begin(), ranked.end(),
+              [](const auto& a, const auto& b) { return a.second > b.second; });
+
+    std::vector<int> recommendations;
+    for (const auto& [movieId, _] : ranked) {
+        if (recommendations.size() == 5) break;
+        recommendations.push_back(movieId);
     }
 
-    sort(ranking.begin(), ranking.end(),
-         [](auto& a, auto& b){ return a.first > b.first; });
-
-    vector<int> top5;
-    for (int i = 0; i < 5 && i < ranking.size(); i++) {
-        top5.push_back(ranking[i].second);
-    }
-
-    return top5;
+    return recommendations;
 }
-
-
