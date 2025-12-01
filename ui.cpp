@@ -159,9 +159,9 @@ int main() {
         cout << "╠═════════════════════════════════════════════════════════════╣\n";
         
         if (!knnShown)
-            cout << "║ 1. People With Similar Taste Also Liked (KNN)               ║\n";
+            cout << "║ 1. People With Similar Taste Also Liked                     ║\n";
         if (!cfShown)
-            cout << "║ 2. We Think You Would LOVE These ❤️ (CF)                     ║\n";
+            cout << "║ 2. We Think You Would LOVE These ❤️                          ║\n";
         
         cout << "║ 3. Exit                                                     ║\n";
         cout << "╚═════════════════════════════════════════════════════════════╝\n→ ";
