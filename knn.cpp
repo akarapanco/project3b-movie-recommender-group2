@@ -13,6 +13,7 @@ std::vector<int> getKNNRecommendations(
     const std::vector<Movie>& movies,
     const std::string& preferredGenre
 ) {
+    // if user id exists, return an empty vector.
     if (!users.count(userId)) return {};
 
     const User& target = users.at(userId);
@@ -47,11 +48,12 @@ std::vector<int> getKNNRecommendations(
         }
         if (added) ++neighborsChecked;
     }
-
+// sorts movies by rank.
     std::vector<std::pair<int, double>> ranked(movieScores.begin(), movieScores.end());
     std::sort(ranked.begin(), ranked.end(),
               [](const auto& a, const auto& b) { return a.second > b.second; });
 
+    // returns a vector of top 5 movie recomendations.
     std::vector<int> recommendations;
     for (const auto& [movieId, _] : ranked) {
         if (recommendations.size() == 5) break;
