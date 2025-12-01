@@ -5,7 +5,7 @@
 #include <cmath>
 #include "models.h"
 #include "utils.h"
-
+// Declaring KNN nearest neighbors function
 std::vector<int> getKNNRecommendations(
     int userId,
     const std::unordered_map<int, User>& users,
