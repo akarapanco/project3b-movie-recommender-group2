@@ -7,6 +7,7 @@
 #include "models.h"
 #include "utils.h"
 
+// This is Collaborative filter recommendation function. Based on user ratings it will return top 5 movie recommendations.
 std::vector<int> getCFRecommendations(
     int userId,
     const std::unordered_map<int, User>& users,
