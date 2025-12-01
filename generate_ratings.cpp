@@ -1,36 +1,60 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <string>
 #include <random>
-using namespace std;
+#include <unordered_map>
+#include <set>
 
-int main() {
-    const int NUM_USERS = 1000;    
-    const int NUM_MOVIES = 100;      
-    const int RATINGS_PER_USER = 120; 
+struct Rating {
+    int userId;
+    int movieId;
+    double rating;
+};
 
-    ofstream out("user_ratings.csv");
-    if (!out.is_open()) {
-        cout << "Error opening file.\n";
-        return 1;
-    }
+std::vector<Rating> generateRatings(int numUsers, int numMovies, int ratingsPerUser) {
+    std::vector<Rating> ratings;
+    std::default_random_engine generator;
+    std::uniform_real_distribution<double> ratingDist(1.0, 5.0);
+    std::uniform_int_distribution<int> movieDist(1, numMovies);
 
-    out << "user_id,movie_id,rating\n";
-
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_int_distribution<> movieDist(1, NUM_MOVIES);
-    uniform_real_distribution<> ratingDist(1.0, 5.0);
-
-    for (int user = 1; user <= NUM_USERS; user++) {
-        for (int r = 0; r < RATINGS_PER_USER; r++) {
-            int movie = movieDist(gen);
-            double rating = ratingDist(gen);
-
-            out << user << "," << movie << "," << rating << "\n";
+    for (int user = 1; user <= numUsers; ++user) {
+        std::set<int> ratedMovies;
+        while (ratedMovies.size() < ratingsPerUser) {
+            int movieId = movieDist(generator);
+            if (ratedMovies.insert(movieId).second) {
+                double score = std::round(ratingDist(generator) * 2.0) / 2.0;
+                ratings.push_back({ user, movieId, score });
+            }
         }
     }
+    return ratings;
+}
 
-    out.close();
-    
+void writeRatingsToCSV(const std::vector<Rating>& ratings, const std::string& filename) {
+    std::ofstream file(filename);
+    file << "user_id,movie_id,rating\n";
+    for (const auto& r : ratings) {
+        file << r.userId << "," << r.movieId << "," << r.rating << "\n";
+    }
+    file.close();
+}
+
+int main() {
+    const int totalUsers = 1100;
+    const int requiredUsers = 100;
+    const int movies = 100;
+    const int ratingsPerUser = 20;
+
+    std::vector<Rating> ratings = generateRatings(1000, movies, ratingsPerUser);
+    std::vector<Rating> extra = generateRatings(requiredUsers, movies, ratingsPerUser);
+    for (auto& r : extra) r.userId += 1000;
+    ratings.insert(ratings.end(), extra.begin(), extra.end());
+    writeRatingsToCSV(ratings, "user_ratings.csv");
+
+    std::cout << "Finished: " << ratings.size()
+              << " ratings written to user_ratings.csv for users 1–1100.\n";
+
     return 0;
 }
+
