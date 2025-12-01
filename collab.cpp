@@ -15,11 +15,13 @@ std::vector<int> getCFRecommendations(
     const std::string& preferredGenre,
     const std::vector<int>& excludeMovieIds = {}
 ) {
+    // checks if user id exists
     if (!users.count(userId)) return {};
 
     const auto& target = users.at(userId);
     std::unordered_map<int, double> predSum, simSum;
-
+    // goes through list of users. Loop will skip users that have already been rated.
+    // If not skipped CosineSimilarity will between target and otherUser will be calculated. 
     for (const auto& [otherId, otherUser] : users) {
         if (otherId == userId) continue;
         double sim = cosineSimilarity(target, otherUser);
@@ -44,12 +46,13 @@ std::vector<int> getCFRecommendations(
             predictions.emplace_back(movieId, sum / simSum[movieId]);
         }
     }
-
+// This will sort predictions.
     std::sort(predictions.begin(), predictions.end(),
               [](const auto& a, const auto& b) { return a.second > b.second; });
 
     std::unordered_set<int> excluded(excludeMovieIds.begin(), excludeMovieIds.end());
     std::vector<int> recommendations;
+    // Recomendation list being built and will be returned once it reaches a size of 5.
     for (const auto& [movieId, _] : predictions) {
         if (excluded.count(movieId)) continue;
         recommendations.push_back(movieId);
